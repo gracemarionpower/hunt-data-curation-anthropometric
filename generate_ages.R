@@ -22,6 +22,11 @@ data_clean <- subset(data, !is.na(AgeAtObsEnd) & AgeAtObsEnd > 0)
 # (Optional) Check summary of cleaned age variable
 summary(data_clean$AgeAtObsEnd)
 
+sum(data_clean$AgeAtObsEnd >= 13 & data_clean$AgeAtObsEnd <= 18)
+table(data_clean$AgeAtObsEnd)
+# Not many == 235
+
+nrow(data_clean)
 
 
 
