@@ -9,6 +9,8 @@ setwd("/home/grace.power/scratch/grace/data/2021_03_22_Brumpton_eksport_av_ny_be
 data <- read_tsv("2021-03-22_110556_Data_ny_bestilling_paa_nytt_utvalg_crpfixed.tsv",                            
                  col_types = cols(.default = col_character()))
 
+# YoungHUNT available
+
 # Original list with @ symbols
 vars_raw <- c(
   "PID.110556", "Sex", "BirthYear",
@@ -100,3 +102,64 @@ for (var in age_vars) {
   print(summary(as.numeric(YH1to4_data_ordered[[var]])))
   cat("SD:", sd(as.numeric(YH1to4_data_ordered[[var]]), na.rm = TRUE), "\n")
 }
+
+# HUNT adults
+
+anthro_roots <- c("Wei", "Hei", "WaistCirc", "HipCirc", "Bmi", "ArmCirc", "LegCirc", "NeckCirc")
+
+# Use pattern that allows for suffixes like .NT1BLM, .NT2BLQ1, etc.
+pattern <- paste0("^(", paste(anthro_roots, collapse = "|"), ")\\.NT[1-4]")
+
+# Allow for more characters after NT1–NT4
+pattern <- paste0(pattern, ".*")
+
+# Match column names
+nt_anthro_vars <- grep(pattern, colnames(data), value = TRUE)
+
+# Display matches
+cat("Matched NT1–NT4 anthropometric variables:\n")
+print(nt_anthro_vars)
+
+# Keep ID, Sex, and BirthYear
+core_vars <- c("PID.110556", "Sex", "BirthYear")
+
+# ✅ Define nt_anthro_data here
+nt_anthro_data <- data[, c(core_vars, nt_anthro_vars)]
+
+# Function to get NT wave columns
+get_nt_wave_vars <- function(data, nt_wave) {
+  grep(paste0("\\.NT", nt_wave), colnames(data), value = TRUE)
+}
+
+# Build reordered column list
+ordered_nt_vars <- c(
+  core_vars,
+  get_nt_wave_vars(nt_anthro_data, "1"),
+  get_nt_wave_vars(nt_anthro_data, "2"),
+  get_nt_wave_vars(nt_anthro_data, "3"),
+  get_nt_wave_vars(nt_anthro_data, "4")
+)
+
+# Reorder the data
+nt_anthro_data_ordered <- nt_anthro_data[, ordered_nt_vars]
+
+# Save
+write.csv(nt_anthro_data_ordered, "H1to4_data_ordered.csv", row.names = FALSE)
+
+# Merge datasets by PID (keeping all participants from either dataset)
+combined_data <- merge(YH1to4_data_ordered, nt_anthro_data_ordered, 
+                       by = c("PID.110556", "Sex", "BirthYear"), 
+                       all = TRUE)
+
+# Convert all "<NA>" strings to actual NA values in the dataset
+YH1to4_data_ordered[YH1to4_data_ordered == "<NA>"] <- NA
+nt_anthro_data_ordered[nt_anthro_data_ordered == "<NA>"] <- NA
+combined_data[combined_data == "<NA>"] <- NA
+
+
+# Save to CSV
+write.csv(combined_data, "YH_and_HNT_combined.csv", row.names = FALSE)
+
+
+
+
