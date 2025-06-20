@@ -62,6 +62,41 @@ YH1to4_data_ordered <- subset_data[, ordered_vars]
 head(YH1to4_data_ordered)
 write.csv(YH1to4_data_ordered, "YH1to4_data_ordered.csv", row.names = FALSE)
 
+# Reload dataset
+YH1to4_data_ordered <- read.csv("YH1to4_data_ordered.csv", stringsAsFactors = FALSE)
 
+# Function to count complete cases for a wave
+count_complete_wave <- function(data, wave_suffix) {
+  wave_cols <- grep(paste0("\\.", wave_suffix, "$"), colnames(data), value = TRUE)
+  complete_cases <- complete.cases(data[, wave_cols])
+  sum(complete_cases)
+}
 
+# Count complete rows for each wave
+n_YH1 <- count_complete_wave(YH1to4_data_ordered, "YH1BLM")
+n_YH2 <- count_complete_wave(YH1to4_data_ordered, "YH2BLM")
+n_YH3 <- count_complete_wave(YH1to4_data_ordered, "YH3BLM")
+n_YH4 <- count_complete_wave(YH1to4_data_ordered, "YH4BLQ")  # use YH4BLM if you have those
 
+# Print results
+cat("People with full data:\n")
+cat("YH1:", n_YH1, "\n")
+cat("YH2:", n_YH2, "\n")
+cat("YH3:", n_YH3, "\n")
+cat("YH4:", n_YH4, "\n")
+
+People with full data:
+# YH1: 8398 
+# YH2: 1693 
+# YH3: 7680 
+# YH4: 8066 
+
+# Summarise age columns per wave
+age_vars <- c("PartAg.YH1BLQ", "PartAg.YH2BLQ", "PartAg.YH3BLQ", "PartAg.YH4BLQ")
+
+# Loop over each age variable and print summary
+for (var in age_vars) {
+  cat("\nSummary for", var, ":\n")
+  print(summary(as.numeric(YH1to4_data_ordered[[var]])))
+  cat("SD:", sd(as.numeric(YH1to4_data_ordered[[var]]), na.rm = TRUE), "\n")
+}
