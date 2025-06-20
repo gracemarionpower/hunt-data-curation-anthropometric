@@ -4,3 +4,5 @@ The pipeline performs the following tasks:
 
 Generates a static covariate file containing FID, IID, sex, yob for children, mothers, and fathers. Each individual is treated independently.
 Generates  separate long-format time-varying trait files with columns: FID, IID, value, age (when value measured). Individuals may have multiple repeated measurements, each recorded independently and will be treated in the pipeline as seperate individuals.
+
+Collaborators include: Ben Brumpton and Bjørn Olav Åsvold, NTNU
