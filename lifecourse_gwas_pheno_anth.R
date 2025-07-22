@@ -1,9 +1,7 @@
-
 library(readr)
 
 # Set working directory
 setwd("/home/grace.power/scratch/grace/data/lifecourse_gwas")
-
 
 # Read data with PID as character
 data <- read_csv(
@@ -16,12 +14,12 @@ make_long_measure <- function(data, var_prefix, age_prefix = "PartAg") {
   value_vars <- paste0(var_prefix, ".", visits, "BLM")
   age_vars <- paste0(age_prefix, ".", visits, "BLQ1")
   age_vars <- ifelse(grepl("^YH", visits), paste0(age_prefix, ".", visits, "BLQ"), age_vars)
-  
+
   valid <- value_vars %in% names(data) & age_vars %in% names(data)
   value_vars <- value_vars[valid]
   age_vars <- age_vars[valid]
   visits <- visits[valid]
-  
+
   long_df <- do.call(rbind, lapply(seq_along(visits), function(i) {
     pid <- data$PID.110556
     data.frame(
@@ -32,25 +30,40 @@ make_long_measure <- function(data, var_prefix, age_prefix = "PartAg") {
       stringsAsFactors = FALSE
     )
   }))
-  
+
   return(long_df)
 }
 
+save_versions <- function(df, base_name) {
+  # Save all data (with missing values)
+  write.table(df, paste0(base_name, "_full.txt"), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE, na = ".")
+
+  # Save only complete cases
+  complete_df <- df[!is.na(df$value) & !is.na(df$age), ]
+  write.table(complete_df, paste0(base_name, ".txt"), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE, na = ".")
+}
+
+# HEIGHT
 height_data <- make_long_measure(data, "Hei")
-write.table(height_data, "height.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE, na = ".")
+save_versions(height_data, "height")
 
+# WAIST CIRCUMFERENCE
 waist_data <- make_long_measure(data, "WaistCirc")
-write.table(waist_data, "waist_circumference.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE, na = ".")
+save_versions(waist_data, "wc")
 
+# HIP
 hip_data <- make_long_measure(data, "HipCirc")
 
+# WHR
 whr_data <- waist_data
 whr_data$value <- waist_data$value / hip_data$value
-write.table(whr_data, "waist_hip_ratio.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE, na = ".")
+save_versions(whr_data, "whr")
 
+# WEIGHT
 weight_data <- make_long_measure(data, "Wei")
 
+# BMI
 bmi_data <- weight_data
 bmi_data$value <- weight_data$value / (height_data$value / 100)^2
-write.table(bmi_data, "bmi.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE, na = ".")
+save_versions(bmi_data, "bmi")
 
