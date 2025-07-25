@@ -83,19 +83,32 @@ for (var in age_vars) {
 anthro_roots <- c("Wei", "Hei", "WaistCirc", "HipCirc", "Bmi", "ArmCirc", "LegCirc", "NeckCirc", 
                   "Pbf", "Slm", "Smm", "Vfa", "Vfl")
 
+# Include all relevant age variables (YH and NT)
+age_vars <- c(
+  "PartAg.YH1BLQ", "PartAg.YH2BLQ", "PartAg.YH3BLQ", "PartAg.YH4BLQ",
+  "PartAg.NT1BLQ1", "PartAg.NT2BLQ1", "PartAg.NT3BLQ1", "PartAg.NT4BLQ1"
+)
+
+# Identify NT anthropometric variable names
 pattern <- paste0("^(", paste(anthro_roots, collapse = "|"), ")\\.NT[1-4].*")
 nt_anthro_vars <- grep(pattern, colnames(data), value = TRUE)
 
 cat("Matched NT1–NT4 anthropometric variables:\n")
 print(nt_anthro_vars)
 
-core_vars <- c("PID.110556", "Sex", "BirthYear")
-nt_anthro_data <- data[, c(core_vars, nt_anthro_vars)]
+# Also include NT age variables if present
+nt_age_vars <- age_vars[grepl("NT", age_vars) & age_vars %in% colnames(data)]
 
+# Create NT dataset
+core_vars <- c("PID.110556", "Sex", "BirthYear")
+nt_anthro_data <- data[, c(core_vars, nt_anthro_vars, nt_age_vars)]
+
+# Helper to group variables by NT wave
 get_nt_wave_vars <- function(data, nt_wave) {
   grep(paste0("\\.NT", nt_wave), colnames(data), value = TRUE)
 }
 
+# Reorder columns by wave
 ordered_nt_vars <- c(
   core_vars,
   get_nt_wave_vars(nt_anthro_data, "1"),
@@ -104,10 +117,11 @@ ordered_nt_vars <- c(
   get_nt_wave_vars(nt_anthro_data, "4")
 )
 
+# Export ordered NT data
 nt_anthro_data_ordered <- nt_anthro_data[, ordered_nt_vars]
 write.csv(nt_anthro_data_ordered, "H1to4_data_ordered.csv", row.names = FALSE)
 
-# Merge Young-HUNT and Adult HUNT datasets
+# Merge with Young-HUNT data
 combined_data <- merge(YH1to4_data_ordered, nt_anthro_data_ordered, 
                        by = c("PID.110556", "Sex", "BirthYear"), 
                        all = TRUE)
